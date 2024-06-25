@@ -2,7 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import  SonarIssueLoader  from './controller';
+import  {SonarIssueController,SecurityHotspotController}  from './controller';
 import * as path from 'path';
 
 
@@ -16,33 +16,85 @@ export  async function activate(context: vscode.ExtensionContext) {
         return;
     }
 
-    let issueLoader = new SonarIssueLoader(config);
+     // Crear colecciones de diagnósticos globales
+     const issuesDiagnostics = vscode.languages.createDiagnosticCollection('sonarIssues');
+     const hotspotsDiagnostics = vscode.languages.createDiagnosticCollection('sonarHotspots');
+ 
+     context.subscriptions.push(issuesDiagnostics, hotspotsDiagnostics);
+ 
+     // Asegúrate de inicializar y configurar tus loaders aquí
+     const issueLoader = new SonarIssueController(config);
+     const securityLoader = new SecurityHotspotController(config);
+ 
+     // Implementación de comandos con reutilización de colecciones globales
+     const loadIssuesCommand = vscode.commands.registerCommand('sonarext.loadSonarIssues', async () => {
+         const diagnostics = await issueLoader.fetchNextPage();
+         const count = updateDiagnostics(diagnostics, issuesDiagnostics);
+         vscode.window.showInformationMessage(`Fetched a page of SonarQube issues. Total: ${count}`);
+     });
+ 
+     const loadAllIssuesCommand = vscode.commands.registerCommand('sonarext.loadAllSonarIssues', async () => {
+         const diagnostics = await issueLoader.fetchAllPages();
+         const count = updateDiagnostics(diagnostics, issuesDiagnostics);
+         vscode.window.showInformationMessage(`All SonarQube issues loaded. Total issues loaded: ${count}`);
+     });
+ 
+     const loadSecurityHotspotsCommand = vscode.commands.registerCommand('sonarext.loadSecurityHostpots', async () => {
+         const diagnostics = await securityLoader.fetchNextPage();
+         const count = updateDiagnostics(diagnostics, hotspotsDiagnostics);
+         vscode.window.showInformationMessage(`Fetched a page of SonarQube security hotspots. Total: ${count}`);
+     });
+ 
+     const loadAllSecurityHotspotsCommand = vscode.commands.registerCommand('sonarext.loadAllSecurityHostpots', async () => {
+         const diagnostics = await securityLoader.fetchAllPages();
+         const count = updateDiagnostics(diagnostics, hotspotsDiagnostics);
+         vscode.window.showInformationMessage(`All SonarQube security hotspots loaded. Total issues loaded: ${count}`);
+     });
+ 
+     const clearIssuesCommand = vscode.commands.registerCommand('sonarext.clearIssues', () => {
+         issuesDiagnostics.clear();
+         vscode.window.showInformationMessage('All SonarQube issues have been cleared.');
+         issueLoader.restart()
+     });
+ 
+     const clearHotspotsCommand = vscode.commands.registerCommand('sonarext.clearHotspots', () => {
+         hotspotsDiagnostics.clear();
+         vscode.window.showInformationMessage('All SonarQube Hotspots have been cleared.');
+         securityLoader.restart()
+     });
+ 
+     context.subscriptions.push(loadIssuesCommand, loadAllIssuesCommand, loadSecurityHotspotsCommand, loadAllSecurityHotspotsCommand, clearIssuesCommand, clearHotspotsCommand);
+ }
+ function updateDiagnostics(diagnosticsMap: Map<string, vscode.Diagnostic[]>, diagnosticsCollection: vscode.DiagnosticCollection): number {
+    let totalDiagnostics = 0;
+    // diagnosticsCollection.clear(); // Opcional, descomentar si deseas limpiar antes de actualizar
+    let count =  0
+    diagnosticsMap.forEach((diagnostics, fileUri) => {
+        count+=diagnostics.length
+        const uri = vscode.Uri.file(fileUri);
 
-    const loadIssuesCommand = vscode.commands.registerCommand('sonarext.loadSonarIssues', async () => {
-        const diagnostics: Map<string, vscode.Diagnostic[]> = await issueLoader.fetchNextPage();
-        const count = updateDiagnostics(context,diagnostics);
-        vscode.window.showInformationMessage(`Fetched a page of SonarQube issues. total: ${count}`);
-    });
+        // Verificar y combinar diagnósticos existentes si es necesario
+        let existingDiagnostics = diagnosticsCollection.get(uri) || [];
+        let combinedDiagnostics = existingDiagnostics.concat(diagnostics);
+        console.log("combinedDiagnostics")
+        console.log(fileUri)
+        console.log(combinedDiagnostics)
+        if(existingDiagnostics.length>0){
+            console.log("found")
+        }
+        // Establecer los diagnósticos combinados en la colección
+        diagnosticsCollection.set(uri, combinedDiagnostics);
 
-    const loadAllIssuesCommand = vscode.commands.registerCommand('sonarext.loadAllSonarIssues', async () => {
-        const diagnostics = await issueLoader.fetchAllIssues();
-        const count  =updateDiagnostics(context,diagnostics);
-        vscode.window.showInformationMessage(`All SonarQube issues loaded. Total issues loaded: ${count}`);
+        // Actualizar el contador total de diagnósticos
+        totalDiagnostics += diagnostics.length;
     });
-    
-    context.subscriptions.push(loadIssuesCommand, loadAllIssuesCommand);
+    console.log("adding "+count)
+    // console.log("adding "+count)
+    console.log("------ fimal diasnotics collection ------")    
+    console.log(diagnosticsCollection)
+
+    return totalDiagnostics;
 }
-function updateDiagnostics(context: vscode.ExtensionContext,diagnosticsMap: Map<string, vscode.Diagnostic[]>):Number {
-    const diagnosticsCollection = vscode.languages.createDiagnosticCollection('sonarlint');
-    let count  =  0
-    diagnosticsMap.forEach((diags, file) => {
-        diagnosticsCollection.set(vscode.Uri.parse(file), diags);
-        count+= diags.length
-    });
-    context.subscriptions.push(diagnosticsCollection);
-    return count
-}
-
 
 
 async function getSonarConfig() {

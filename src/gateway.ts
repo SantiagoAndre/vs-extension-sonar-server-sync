@@ -12,11 +12,12 @@ export class SonarService {
         console.log(response)
         return response.data;
     }
-    async fetchSecurityHotspots(projectKey: string, page: number, pageSize: number): Promise<any> {
-        const url = `${this.config.host}/api/hotspots/search?projectKey=${projectKey}&p=${page}&ps=${pageSize}`;
+    async fetchSecurityHotspots( page: number, pageSize: number): Promise<any> {
+        const { host, token, projectKey } = this.config;
+        const url = `${host}/api/hotspots/search?projectKey=${projectKey}&p=${page}&ps=${pageSize}`;
         try {
             const response = await fetch(url, {
-                headers: { 'Authorization': `Basic ${Buffer.from(`${this.config.token}:`).toString('base64')}` },
+                headers: { 'Authorization': `Basic ${Buffer.from(`${token}:`).toString('base64')}` },
                 method: 'GET'
             });
             return response.json();

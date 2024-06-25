@@ -1,8 +1,8 @@
 {
   "name": "sonarext",
-  "displayName": "SonarQube Fetch Issues",
+  "displayName": "Sonar Sync Problems",
   "description": "",
-  "version": "0.0.4",
+  "version": "0.0.7",
   "engines": {
     "vscode": "^1.70.0"
   },
@@ -15,15 +15,27 @@
     "commands": [
       {
         "command": "sonarext.loadSonarIssues",
-        "title": "Fetch Sonar Issues"
+        "title": "SonarSync: Fetch Sonar Issues"
       },
       {
         "command": "sonarext.loadAllSonarIssues",
-        "title": "Fetch ALL Sonar Issues"
+        "title": "SonarSync: Fetch ALL Sonar Issues"
       },
       {
         "command": "sonarext.loadSecurityHostpots",
-        "title": "Fetch Security Hostpots"
+        "title": "SonarSync: Fetch Security Hostpots"
+      },
+      {
+        "command": "sonarext.loadAllSecurityHostpots",
+        "title": "SonarSync: Fetch ALL Security Hostpots"
+      },
+      {
+        "command": "sonarext.clearHotspots",
+        "title": "SonarSync: Clear All Security Hostpots Problems"
+      },
+      {
+        "command": "sonarext.clearIssues",
+        "title": "SonarSync: Clear All Issues Problems "
       }
     ]
   },
