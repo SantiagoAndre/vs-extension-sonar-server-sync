@@ -2,7 +2,7 @@
   "name": "sonarext",
   "displayName": "Sonar Sync Problems",
   "description": "",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "icon": "images/icon.png",
   "engines": {
     "vscode": "^1.50.0"

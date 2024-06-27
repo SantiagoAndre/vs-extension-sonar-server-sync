@@ -1,9 +1,6 @@
 # SonarQube Issues Loader for Visual Studio Code
 
-<video width="320" height="240" controls>
-  <source src="images/demo.webm" type="video/webm">
-  Your browser does not support the video tag.
-</video>
+<img src="images/demo.gif" height="320" alt="Demo">
 
 This Visual Studio Code extension allows you to load and view SonarQube issues directly within the development environment, making it easier to review and address code issues without leaving the editor.
 
