@@ -20,7 +20,6 @@ export  async function activate(context: vscode.ExtensionContext) {
      const issuesDiagnostics = vscode.languages.createDiagnosticCollection('sonarIssues');
      const hotspotsDiagnostics = vscode.languages.createDiagnosticCollection('sonarHotspots');
  
-     context.subscriptions.push(issuesDiagnostics, hotspotsDiagnostics);
  
      // Asegúrate de inicializar y configurar tus loaders aquí
      const issueLoader = new SonarIssueController(config);
@@ -31,12 +30,14 @@ export  async function activate(context: vscode.ExtensionContext) {
          const diagnostics = await issueLoader.fetchNextPage();
          const count = updateDiagnostics(diagnostics, issuesDiagnostics);
          vscode.window.showInformationMessage(`Fetched a page of SonarQube issues. Total: ${count}`);
+         context.subscriptions.push(issuesDiagnostics)
      });
  
      const loadAllIssuesCommand = vscode.commands.registerCommand('sonarext.loadAllSonarIssues', async () => {
          const diagnostics = await issueLoader.fetchAllPages();
          const count = updateDiagnostics(diagnostics, issuesDiagnostics);
          vscode.window.showInformationMessage(`All SonarQube issues loaded. Total issues loaded: ${count}`);
+         context.subscriptions.push(issuesDiagnostics)
      });
  
      const loadSecurityHotspotsCommand = vscode.commands.registerCommand('sonarext.loadSecurityHostpots', async () => {
@@ -62,37 +63,25 @@ export  async function activate(context: vscode.ExtensionContext) {
          vscode.window.showInformationMessage('All SonarQube Hotspots have been cleared.');
          securityLoader.restart()
      });
+    //  context.subscriptions.push(issuesDiagnostics, hotspotsDiagnostics);
  
      context.subscriptions.push(loadIssuesCommand, loadAllIssuesCommand, loadSecurityHotspotsCommand, loadAllSecurityHotspotsCommand, clearIssuesCommand, clearHotspotsCommand);
  }
  function updateDiagnostics(diagnosticsMap: Map<string, vscode.Diagnostic[]>, diagnosticsCollection: vscode.DiagnosticCollection): number {
     let totalDiagnostics = 0;
-    // diagnosticsCollection.clear(); // Opcional, descomentar si deseas limpiar antes de actualizar
-    let count =  0
     diagnosticsMap.forEach((diagnostics, fileUri) => {
-        count+=diagnostics.length
         const uri = vscode.Uri.file(fileUri);
 
         // Verificar y combinar diagnósticos existentes si es necesario
         let existingDiagnostics = diagnosticsCollection.get(uri) || [];
         let combinedDiagnostics = existingDiagnostics.concat(diagnostics);
-        console.log("combinedDiagnostics")
-        console.log(fileUri)
-        console.log(combinedDiagnostics)
-        if(existingDiagnostics.length>0){
-            console.log("found")
-        }
+      
         // Establecer los diagnósticos combinados en la colección
         diagnosticsCollection.set(uri, combinedDiagnostics);
 
         // Actualizar el contador total de diagnósticos
         totalDiagnostics += diagnostics.length;
     });
-    console.log("adding "+count)
-    // console.log("adding "+count)
-    console.log("------ fimal diasnotics collection ------")    
-    console.log(diagnosticsCollection)
-
     return totalDiagnostics;
 }
 

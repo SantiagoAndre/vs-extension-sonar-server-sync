@@ -97,7 +97,7 @@ class SonarIssueController  extends SonarController {
             case 'MINOR':
                 return vscode.DiagnosticSeverity.Warning;
             case 'INFO':
-                return vscode.DiagnosticSeverity.Hint;
+                return vscode.DiagnosticSeverity.Information;
             default:
                 return vscode.DiagnosticSeverity.Warning; // Default case if severity is not recognized
         }
