@@ -1,6 +1,6 @@
 # SonarQube Issues Loader for Visual Studio Code
 
-<img src="images/demo.gif" height="320" alt="Demo">
+<img src="images/demo.gif" width="max" alt="Demo">
 
 This Visual Studio Code extension allows you to load and view SonarQube issues directly within the development environment, making it easier to review and address code issues without leaving the editor.
 
